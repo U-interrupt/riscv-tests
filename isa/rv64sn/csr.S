@@ -10,6 +10,13 @@
 #include "riscv_test.h"
 #include "test_macros.h"
 
+#undef RVTEST_ENABLE_SUPERVISOR
+#define RVTEST_ENABLE_SUPERVISOR                                        \
+  li a0, MSTATUS_MPP & (MSTATUS_MPP >> 1);                              \
+  csrs mstatus, a0;                                                     \
+  li a0, SIP_SSIP | SIP_STIP | MIP_USIP;                                \
+  csrs mideleg, a0;                                                     \
+
 RVTEST_RV64S
 RVTEST_CODE_BEGIN
 
@@ -18,9 +25,9 @@ RVTEST_CODE_BEGIN
   TEST_CASE(2, a0, 3, csrwi utval, 3; csrr a0, utval);
   TEST_CASE(3, a0, 3, csrwi uepc, 3; csrr a0, uepc);
   li a1, MIP_USIP;
-  TEST_CASE(4, a0, 1, csrsi uip, IRQ_U_SOFT; csrr a0, uip; and a0, a0, a1);
-  TEST_CASE(5, a0, 1, csrsi uie, IRQ_U_SOFT; csrr a0, uie; and a0, a0, a1);
-  TEST_CASE(6, a0, 1, csrsi sideleg, IRQ_U_SOFT; csrr a0, sideleg; and a0, a0, a1);
+  TEST_CASE(4, a0, 1, csrsi sideleg, MIP_USIP; csrr a0, sideleg; and a0, a0, a1);
+  TEST_CASE(5, a0, 1, csrsi uip, MIP_USIP; csrr a0, uip; and a0, a0, a1);
+  TEST_CASE(6, a0, 1, csrsi uie, MIP_USIP; csrr a0, uie; and a0, a0, a1);
 
   # jump to user land
   li t0, SSTATUS_SPP
@@ -28,9 +35,10 @@ RVTEST_CODE_BEGIN
   la t0, 1f
   csrw sepc, t0
   # setup user interrupt handler
-  csrw uepc, t0
   la t0, utvec_handler
   csrw utvec, t0
+  # enable user interrupt
+  csrsi ustatus, USTATUS_UIE
   sret
   1:
 
@@ -75,6 +83,8 @@ utvec_handler:
   li t0, 0xdead
   la t1, result
   sw t0, 0x0(t1)
+  # clear pending interrupt
+  csrci uip, MIP_USIP
   uret
 
 RVTEST_CODE_END
