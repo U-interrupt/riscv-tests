@@ -4,6 +4,7 @@
 
 rv64sn_sc_tests = \
 	csr \
+	uintc \
 	uipi \
 
 rv64sn_p_tests = $(addprefix rv64sn-p-, $(rv64sn_sc_tests))
