@@ -26,15 +26,10 @@
 RVTEST_RV64S
 RVTEST_CODE_BEGIN
 
-  # suicfg
-  li t0, UINTC_BASE
-  csrw 0x1b2, t0
-  TEST_CASE(0, t1, UINTC_BASE, csrr t1, 0x1b2)
-  
   # suirs: v=1, idx=0
   li t0, (1 << 63)
   csrw 0x1b1, t0
-  TEST_CASE(1, t1, 0, csrr t1, 0x1b1; xor t1, t1, t0)
+  TEST_CASE(0, t1, 0, csrr t1, 0x1b1; xor t1, t1, t0)
   # mode=1, hartid=a0, pendings=0
   slli t0, a0, 16
   ori t0, t0, 2
@@ -51,7 +46,7 @@ RVTEST_CODE_BEGIN
   li t1, ((1 << 63) | (1 << 44))
   or t0, t0, t1
   csrw 0x1b0, t0
-  TEST_CASE(2, t1, 0, csrr t1, 0x1b0; xor t1, t1, t0)
+  TEST_CASE(1, t1, 0, csrr t1, 0x1b0; xor t1, t1, t0)
 
   # jump to user land
   li t0, SSTATUS_SPP
@@ -69,16 +64,25 @@ finish:
 
   # enable user interrupt
   csrsi ustatus, USTATUS_UIE
+  csrci uip, MIP_USIP
   csrsi uie, MIP_USIP
 
   # activate
-  .insn i 0b1111011, 0b010, x0, x0, 0x3
+  .insn r 0b1111011, 0b010, 0b0000011, x0, x0, x0
+  # deactivate
+  .insn r 0b1111011, 0b010, 0b0000100, x0, x0, x0
+  # activate
+  .insn r 0b1111011, 0b010, 0b0000011, x0, x0, x0
 
   # send interrupt
   li t0, 0
-  .insn i 0b1111011, 0b010, x0, t0, 0x0
+  .insn r 0b1111011, 0b010, 0b0000000, x0, t0, x0
 
-  TEST_CASE(5, a0, 0xdead, lw a0, result);
+wait:
+  li t0, 0xdead
+  lw t1, result
+  bne t0, t1, wait
+
   RVTEST_PASS
 
   # We should only fall through to this if scall failed.
@@ -120,8 +124,8 @@ utvec_handler:
   sw t0, 0x0(t1)
 
   # read and clear pending bits
-  TEST_CASE(3, t0, 8, .insn i 0b1111011, 0b010, t0, x0, 0x1)
-  TEST_CASE(4, t0, MIP_USIP, csrr t0, uip)
+  TEST_CASE(2, t0, 8, .insn r 0b1111011, 0b010, 0b0000001, t0, x0, x0)
+  TEST_CASE(3, t0, MIP_USIP, csrr t0, uip)
   csrci uip, MIP_USIP
   uret
 

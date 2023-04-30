@@ -25,16 +25,11 @@
 
 RVTEST_RV64S
 RVTEST_CODE_BEGIN
-
-  # suicfg
-  li t0, UINTC_BASE
-  csrw 0x1b2, t0
-  TEST_CASE(0, t1, UINTC_BASE, csrr t1, 0x1b2)
   
   # suirs: v=1, idx=0
   li t0, (1 << 63)
   csrw 0x1b1, t0
-  TEST_CASE(1, t1, 0, csrr t1, 0x1b1; xor t1, t1, t0)
+  TEST_CASE(0, t1, 0, csrr t1, 0x1b1; xor t1, t1, t0)
   # mode=1, hartid=a0, pendings=0
   slli t0, a0, 16
   ori t0, t0, 3
@@ -51,7 +46,7 @@ RVTEST_CODE_BEGIN
   li t1, ((1 << 63) | (1 << 44))
   or t0, t0, t1
   csrw 0x1b0, t0
-  TEST_CASE(2, t1, 0, csrr t1, 0x1b0; xor t1, t1, t0)
+  TEST_CASE(1, t1, 0, csrr t1, 0x1b0; xor t1, t1, t0)
 
   # jump to user land
   li t0, SSTATUS_SPP
@@ -122,8 +117,8 @@ utvec_handler:
   sw t0, 0x0(t1)
 
   # read and clear pending bits
-  TEST_CASE(3, t0, 8, li t1, UINTC_HIGH(0); ld t0, 0(t1))
-  TEST_CASE(4, t0, MIP_USIP, csrr t0, uip)
+  TEST_CASE(2, t0, 8, li t1, UINTC_HIGH(0); ld t0, 0(t1))
+  TEST_CASE(3, t0, MIP_USIP, csrr t0, uip)
   csrci uip, MIP_USIP
   uret
 
