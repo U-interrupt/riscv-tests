@@ -68,15 +68,15 @@ finish:
   csrsi uie, MIP_USIP
 
   # activate
-  .insn r 0b1111011, 0b010, 0b0000011, x0, x0, x0
+  .insn r 0b1111011, 0b110, 0b0000011, x0, x0, x0
   # deactivate
-  .insn r 0b1111011, 0b010, 0b0000100, x0, x0, x0
+  .insn r 0b1111011, 0b110, 0b0000100, x0, x0, x0
   # activate
-  .insn r 0b1111011, 0b010, 0b0000011, x0, x0, x0
+  .insn r 0b1111011, 0b110, 0b0000011, x0, x0, x0
 
   # send interrupt
   li t0, 0
-  .insn r 0b1111011, 0b010, 0b0000000, x0, t0, x0
+  .insn r 0b1111011, 0b110, 0b0000000, x0, t0, x0
 
 wait:
   li t0, 0xdead
@@ -124,7 +124,7 @@ utvec_handler:
   sw t0, 0x0(t1)
 
   # read and clear pending bits
-  TEST_CASE(2, t0, 8, .insn r 0b1111011, 0b010, 0b0000001, t0, x0, x0)
+  TEST_CASE(2, t0, 8, .insn r 0b1111011, 0b110, 0b0000001, t0, x0, x0)
   TEST_CASE(3, t0, MIP_USIP, csrr t0, uip)
   csrci uip, MIP_USIP
   uret
