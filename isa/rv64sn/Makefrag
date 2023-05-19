@@ -8,3 +8,4 @@ rv64sn_sc_tests = \
 	uipi \
 
 rv64sn_p_tests = $(addprefix rv64sn-p-, $(rv64sn_sc_tests))
+rv64sn_v_tests = $(addprefix rv64sn-v-, $(rv64sn_sc_tests))
